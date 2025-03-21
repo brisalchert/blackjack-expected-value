@@ -43,9 +43,6 @@ public class BlackjackInfinite {
     public double probabilityDealer(int points, int dealerHandValue, boolean soft) {
         double probTotal = 0.0;
 
-        // If hand contains 1 and sum of hand is <= 11, add 10 to the hand and consider it soft
-            // If that hand exceeds 21, call the function again for a soft hand and break the loop
-
         for (int card = 1; card <= 10; card++) {
             int cardAdjusted = card;
 
