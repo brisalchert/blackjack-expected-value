@@ -108,6 +108,9 @@ public class Blackjack {
      * @return the probability of reaching the exact number of points
      */
     public double probabilityDealer(int points, int dealerHandValue) {
+        // Not possible for dealer to stand with fewer than 17 points
+        if (points < 17) return 0.0;
+
         double probTotal = 0.0;
 
         for (int card = 1; card <= 10; card++) {
