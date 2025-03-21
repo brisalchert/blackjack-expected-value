@@ -111,6 +111,9 @@ public class Blackjack {
         double probTotal = 0.0;
 
         for (int card = 1; card <= 10; card++) {
+            if (card == 1 && up == 10 && up == dealerHandValue) continue;
+            if (card == 10 && up == 1 && up == dealerHandValue) continue;
+
             // Stop considering cards when the hand's value exceeds points
             if (dealerHandValue + card > points) break;
 

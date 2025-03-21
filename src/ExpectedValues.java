@@ -10,7 +10,7 @@ public class ExpectedValues {
         int up = 10;
         int playerCard1 = 9;
         int playerCard2 = 7;
-        int numDecks = 6;
+        int numDecks = 1;
 
         Blackjack game = new Blackjack(up, playerCard1, playerCard2, numDecks);
         BlackjackInfinite gameInfinite = new BlackjackInfinite(up, playerCard1, playerCard2);
