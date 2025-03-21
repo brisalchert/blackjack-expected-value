@@ -114,13 +114,17 @@ public class BlackjackInfinite {
         double score = 0.0;
 
         for (int card = 1; card <= 10; card++) {
+            hand.addLast(card);
+
             if (points(hand) + card < 17) {
-                // Add card and hit again
+                // Hit again
                 score += expectedValueHit() * probabilityDraw(card);
             } else {
-                // Add card and stand afterward
+                // Stand
                 score += expectedValueStand() * probabilityDraw(card);
             }
+
+            hand.removeLast();
         }
 
         return score;

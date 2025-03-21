@@ -8,7 +8,7 @@ public class ExpectedValues {
     public static void main(String[] args) {
         // Initialize new games, with finite decks and infinite decks
         int up = 10;
-        int playerCard1 = 10;
+        int playerCard1 = 9;
         int playerCard2 = 7;
         int numDecks = 6;
 
