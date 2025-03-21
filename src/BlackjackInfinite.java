@@ -37,25 +37,40 @@ public class BlackjackInfinite {
      * Calculates the probability of the dealer getting a hand with a certain number of points.
      * @param points the exact number of points the dealer obtains
      * @param dealerHandValue the current value of the dealer's hand (initially just the up card)
+     * @param soft whether the dealer's hand contains a soft Ace
      * @return the probability of reaching the exact number of points
      */
-    public double probabilityDealer(int points, int dealerHandValue) {
+    public double probabilityDealer(int points, int dealerHandValue, boolean soft) {
         double probTotal = 0.0;
 
+        // If hand contains 1 and sum of hand is <= 11, add 10 to the hand and consider it soft
+            // If that hand exceeds 21, call the function again for a soft hand and break the loop
+
         for (int card = 1; card <= 10; card++) {
-            // Stop considering cards when the hand's value exceeds points
-            if (dealerHandValue + card > points) break;
+            int cardAdjusted = card;
 
-            if (dealerHandValue + card == points) {
+            // If a drawn Ace can be soft, update the hand value
+            if (!soft && card == 1 && dealerHandValue <= 10) {
+                cardAdjusted += 10;
+                soft = true;
+            }
+
+            // For bust with soft Ace, reduce Ace value to 1 and continue drawing
+            if (soft && dealerHandValue + cardAdjusted > 21) {
+                probTotal += probabilityDraw(cardAdjusted) * probabilityDealer(points, dealerHandValue - 10 + cardAdjusted, false);
+
+                break;
+            }
+
+            if (dealerHandValue + cardAdjusted == points) {
                 // Add the probability of drawing the exact card needed
-                probTotal += (probabilityDraw(card));
-            } else if (dealerHandValue + card < 17) {
-                dealerHandValue += card;
-
+                probTotal += (probabilityDraw(cardAdjusted));
+            } else if (dealerHandValue + cardAdjusted < 17) {
                 // Add the probability of getting the point value on further draws => P(a) * P(b|a)
-                probTotal += probabilityDraw(card) * probabilityDealer(points, dealerHandValue);
-
-                dealerHandValue -= card;
+                probTotal += probabilityDraw(cardAdjusted) * probabilityDealer(points, dealerHandValue + cardAdjusted, soft);
+            } else if (cardAdjusted != card) {
+                // Soft Ace not useful; reset boolean
+                soft = false;
             }
         }
 
@@ -86,20 +101,27 @@ public class BlackjackInfinite {
         if (points(hand) > 21) return -1.0;
 
         double score = 0.0;
+        int initDealerHandValue = up;
+        boolean soft = up == 1;
+
+        // Adjust starting dealer hand value if up card is a soft ace
+        if (soft) {
+            initDealerHandValue += 10;
+        }
 
         // Add the score for dealer bust
         for (int dealerScore = 22; dealerScore <= 26; dealerScore++) {
-            score += probabilityDealer(dealerScore, up);
+            score += probabilityDealer(dealerScore, initDealerHandValue, soft);
         }
 
         // Add the score for player stand beats dealer stand
         for (int points = 17; points < points(hand); points++) {
-            score += probabilityDealer(points, up);
+            score += probabilityDealer(points, initDealerHandValue, soft);
         }
 
         // Subtract the score for dealer stand beats player stand
         for (int points = points(hand) + 1; points <= 21; points++) {
-            score -= probabilityDealer(points, up);
+            score -= probabilityDealer(points, initDealerHandValue, soft);
         }
 
         return score;
