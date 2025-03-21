@@ -12,15 +12,17 @@ public class Blackjack {
     private final int up;
     private final ArrayList<Integer> hand;
     private final HashMap<Integer, Integer> deck;
+    private final int numDecks;
 
     // Constructor: Creates a new Blackjack game with a particular player hand and up card.
-    public Blackjack(int up, int card1, int card2) {
+    public Blackjack(int up, int card1, int card2, int numDecks) {
         this.up = up;
         this.hand = new ArrayList<>(2);
         hand.add(card1);
         hand.add(card2);
 
         // Set up the deck
+        this.numDecks = numDecks;
         deck = new HashMap<>();
         initializeDeck();
         removeFromDeck(up);
@@ -36,10 +38,10 @@ public class Blackjack {
             deck.clear();
 
             for (int i = 1; i <= 9; i++) {
-                deck.put(i, 4);
+                deck.put(i, 4 * numDecks);
             }
 
-            deck.put(10, 16);
+            deck.put(10, 16 * numDecks);
         }
     }
 
@@ -62,7 +64,7 @@ public class Blackjack {
      * @throws InputMismatchException if adding the card makes the deck invalid (helps with debugging)
      */
     private void addToDeck(int value) throws InputMismatchException {
-        if ((deck.get(value) < 4) || (value == 10 && (deck.get(value) < 16))) {
+        if ((deck.get(value) < 4 * numDecks) || (value == 10 && (deck.get(value) < 16 * numDecks))) {
             deck.put(value, deck.get(value) + 1);
         } else {
             throw new InputMismatchException("Cannot add " + value + " to the deck");
@@ -105,7 +107,7 @@ public class Blackjack {
      * @param dealerHandValue the current value of the dealer's hand (initially just the up card)
      * @return the probability of reaching the exact number of points
      */
-    private double probabilityDealer(int points, int dealerHandValue) {
+    public double probabilityDealer(int points, int dealerHandValue) {
         double probTotal = 0.0;
 
         for (int card = 1; card <= 10; card++) {
@@ -117,10 +119,10 @@ public class Blackjack {
 
             if (dealerHandValue + card == points) {
                 // Add the probability of drawing the exact card needed
-                probTotal += ((double) deck.get(card) / getDeckSize());
-            } else if (dealerHandValue + card <= 16) {
+                probTotal += (probabilityDraw(card));
+            } else if (dealerHandValue + card < 17) {
                 // Add the probability of getting the point value on further draws => P(a) * P(b|a)
-                double probDraw = ((double) deck.get(card) / getDeckSize());
+                double probDraw = (probabilityDraw(card));
 
                 removeFromDeck(card);
                 dealerHandValue += card;
@@ -136,27 +138,29 @@ public class Blackjack {
     }
 
     /**
-     * Finds the probability of the player drawing a given card from the deck,
-     * accounting for the fact that the dealer must not have a natural.
+     * Finds the probability of drawing a given card from the deck, accounting
+     * for the fact that the dealer must not have a natural.
      * @param card the card to be drawn
      * @return the probability of drawing the card
      */
-    private double probabilityPlayer(int card) {
+    private double probabilityDraw(int card) {
         double countCard = (double) deck.get(card);
         double countDeck = getDeckSize();
 
+        // No need to account for natural
         if (up >= 2 && up <= 9) {
             return countCard / countDeck;
         }
 
-        if ((up == 1) || (up == 10) && (card == 11 - up)) {
+        // Account for dealer not having a natural
+        if (((up == 1) || (up == 10)) && (card == 11 - up)) {
             return countCard / (countDeck - 1);
         }
 
-        double countElevenComplement = deck.get(11 - card);
+        double countUpComplement = deck.get(11 - up);
 
         return (countCard / (countDeck - 1))
-                * ((countDeck - countElevenComplement - 1) / (countDeck - countElevenComplement));
+                * ((countDeck - countUpComplement - 1) / (countDeck - countUpComplement));
     }
 
     /**
@@ -205,10 +209,10 @@ public class Blackjack {
 
             if (points(hand) + card < 17) {
                 // Add card and hit again
-                score += expectedValueHit() * probabilityPlayer(card);
+                score += expectedValueHit() * probabilityDraw(card);
             } else {
                 // Add card and stand afterward
-                score += expectedValueStand() * probabilityPlayer(card);
+                score += expectedValueStand() * probabilityDraw(card);
             }
 
             hand.removeLast();
